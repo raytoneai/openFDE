@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { ProjectState, ChatMessage, Language } from '../types';
 import { AIService } from '../services/aiService';
+import { isAbortLikeError } from '../services/ai/request';
 import { normalizeLinks } from '../lib/cardinality';
 import { getMergedArchetypeById } from '../content/archetypes';
 import { emptyProjectState } from '../lib/navigation';
@@ -34,11 +35,14 @@ export function useDesignOrchestration(deps: DesignOrchestrationDeps) {
 
   const [isDesigning, setIsDesigning] = useState(false);
   const designGenerationIdRef = useRef(0);
+  const designAbortControllerRef = useRef<AbortController | null>(null);
 
   // Archetype state
   const [selectedArchetypeId, setSelectedArchetypeId] = useState<string | null>(null);
 
   const triggerAutoDesign = useCallback(async () => {
+    if (designAbortControllerRef.current) return;
+
     if (!modelConfigured) {
       alert(t('app.alertSelectModel'));
       return;
@@ -51,10 +55,25 @@ export function useDesignOrchestration(deps: DesignOrchestrationDeps) {
 
     const requestProjectId = activeProjectIdRef.current;
     const thisGenerationId = ++designGenerationIdRef.current;
+    const controller = new AbortController();
+    designAbortControllerRef.current = controller;
 
     setIsDesigning(true);
     try {
-      const result = await aiService.current.designOntology(chatHistoryRef.current, { lang: i18nLang });
+      const readiness = await aiService.current.validateReadiness(chatHistoryRef.current, {
+        lang: i18nLang,
+        signal: controller.signal,
+      });
+
+      if (!readiness.ready) {
+        alert(readiness.suggestion || t('app.alertNoChatHistory'));
+        return;
+      }
+
+      const result = await aiService.current.designOntology(chatHistoryRef.current, {
+        lang: i18nLang,
+        signal: controller.signal,
+      });
 
       const parsed = typeof result === 'string' ? JSON.parse(result) : result;
 
@@ -143,12 +162,20 @@ export function useDesignOrchestration(deps: DesignOrchestrationDeps) {
       clearAnalysis();
       setActiveTab('ontology');
     } catch (error) {
+      if (controller.signal.aborted || isAbortLikeError(error)) return;
       console.error('Design failed:', error);
       alert(t('app.alertDesignFailed', { error: error instanceof Error ? error.message : 'Unknown error' }));
     } finally {
+      if (designAbortControllerRef.current === controller) {
+        designAbortControllerRef.current = null;
+      }
       setIsDesigning(false);
     }
   }, [t, i18nLang, modelConfigured, setProject, clearAnalysis, setActiveTab, aiService, chatHistoryRef, activeProjectIdRef, setChatMessages]);
+
+  const cancelAutoDesign = useCallback(() => {
+    designAbortControllerRef.current?.abort(new DOMException('Design generation cancelled', 'AbortError'));
+  }, []);
 
   const handleSelectArchetype = useCallback((archetypeId: string) => {
     setSelectedArchetypeId(archetypeId);
@@ -262,6 +289,7 @@ export function useDesignOrchestration(deps: DesignOrchestrationDeps) {
     isDesigning,
     selectedArchetypeId,
     setSelectedArchetypeId,
+    cancelAutoDesign,
     triggerAutoDesign,
     handleSelectArchetype,
     handleApplyArchetype,

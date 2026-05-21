@@ -26,4 +26,6 @@ export interface EnrichedModelInfo {
 export interface AICallOptions {
   /** User's preferred language code (e.g., 'cn', 'en', 'fr'). Appended to system prompt. */
   lang?: string;
+  /** Optional caller-owned cancellation signal. */
+  signal?: AbortSignal;
 }

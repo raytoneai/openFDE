@@ -24,6 +24,7 @@ import type { FileAttachment, EnrichedModelInfo, AICallOptions } from './ai/type
 import { SYSTEM_INSTRUCTION, DESIGN_PROMPT_TEMPLATE, buildLanguageHint } from './ai/prompts';
 import { type AIMode, getAIMode, isForceProxy } from './ai/mode';
 import { proxyChat, proxyChatWithFiles, proxyDesign, proxyListModels } from './ai/proxyClient';
+import { fetchWithAITimeout, getJSONResponseFormatParam, withAITimeout } from './ai/request';
 import { apiClient } from './apiClient';
 import {
   validateReadiness as _validateReadiness,
@@ -111,30 +112,31 @@ export class AIService {
     return headers;
   }
 
-  private async callGemini(messages: { role: string; content: string }[]): Promise<string> {
+  private async callGemini(messages: { role: string; content: string }[], signal?: AbortSignal): Promise<string> {
     const ai = await this.getGeminiClient();
     const contents = messages.map(msg => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }],
     }));
-    const response = await ai.models.generateContent({
+    const response = await withAITimeout(ai.models.generateContent({
       model: this.settings.model,
       contents: [
         { role: 'user', parts: [{ text: SYSTEM_INSTRUCTION }] },
         { role: 'model', parts: [{ text: '我理解了，我将作为 Ontology 架构师，遵循方法论原则来帮助你设计系统。' }] },
         ...contents,
       ],
-    });
+    }), signal);
     return response.text || '';
   }
 
-  private async callOpenAICompatible(messages: { role: string; content: string }[]): Promise<string> {
+  private async callOpenAICompatible(messages: { role: string; content: string }[], signal?: AbortSignal): Promise<string> {
     const baseUrl = this.getBaseUrl();
     let response: Response;
     try {
-      response = await fetch(`${baseUrl}/chat/completions`, {
+      response = await fetchWithAITimeout(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: this.buildOpenAIHeaders(),
+        signal,
         body: JSON.stringify({
           model: this.settings.model,
           messages: [
@@ -156,13 +158,14 @@ export class AIService {
     return data.choices[0]?.message?.content || '';
   }
 
-  private async callZhipu(messages: { role: string; content: string }[]): Promise<string> {
+  private async callZhipu(messages: { role: string; content: string }[], signal?: AbortSignal): Promise<string> {
     const baseUrl = this.getBaseUrl();
     let response: Response;
     try {
-      response = await fetch(`${baseUrl}/chat/completions`, {
+      response = await fetchWithAITimeout(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${requireProviderApiKey(this.settings)}` },
+        signal,
         body: JSON.stringify({
           model: this.settings.model,
           messages: [
@@ -201,9 +204,9 @@ export class AIService {
     ];
     try {
       switch (this.settings.provider) {
-        case 'gemini': return await this.callGemini(messages);
-        case 'zhipu': return await this.callZhipu(messages);
-        default: return await this.callOpenAICompatible(messages);
+        case 'gemini': return await this.callGemini(messages, options?.signal);
+        case 'zhipu': return await this.callZhipu(messages, options?.signal);
+        default: return await this.callOpenAICompatible(messages, options?.signal);
       }
     } catch (error) {
       console.error('AI调用失败:', error);
@@ -229,9 +232,9 @@ export class AIService {
     }
     try {
       switch (this.settings.provider) {
-        case 'gemini': return await this.callGeminiMultimodal(history, nextMessage, files, options?.lang);
-        case 'zhipu': return await this.callZhipuMultimodal(history, nextMessage, files, options?.lang);
-        default: return await this.callOpenAIMultimodal(history, nextMessage, files, options?.lang);
+        case 'gemini': return await this.callGeminiMultimodal(history, nextMessage, files, options?.lang, options?.signal);
+        case 'zhipu': return await this.callZhipuMultimodal(history, nextMessage, files, options?.lang, options?.signal);
+        default: return await this.callOpenAIMultimodal(history, nextMessage, files, options?.lang, options?.signal);
       }
     } catch (error) {
       console.error('多模态AI调用失败:', error);
@@ -247,7 +250,7 @@ export class AIService {
       mimeType.includes('excel') || mimeType.includes('powerpoint');
   }
 
-  private async callGeminiMultimodal(history: ChatMessage[], nextMessage: string, files: FileAttachment[], lang?: string): Promise<string> {
+  private async callGeminiMultimodal(history: ChatMessage[], nextMessage: string, files: FileAttachment[], lang?: string, signal?: AbortSignal): Promise<string> {
     const ai = await this.getGeminiClient();
     const parts: any[] = [];
     if (nextMessage) parts.push({ text: nextMessage });
@@ -282,7 +285,7 @@ export class AIService {
       }
     }
 
-    const response = await ai.models.generateContent({
+    const response = await withAITimeout(ai.models.generateContent({
       model: this.settings.model,
       contents: [
         { role: 'user', parts: [{ text: SYSTEM_INSTRUCTION + buildLanguageHint(lang) }] },
@@ -290,11 +293,11 @@ export class AIService {
         ...history.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
         { role: 'user', parts },
       ],
-    });
+    }), signal);
     return response.text || '';
   }
 
-  private async callOpenAIMultimodal(history: ChatMessage[], nextMessage: string, files: FileAttachment[], lang?: string): Promise<string> {
+  private async callOpenAIMultimodal(history: ChatMessage[], nextMessage: string, files: FileAttachment[], lang?: string, signal?: AbortSignal): Promise<string> {
     const baseUrl = this.getBaseUrl();
     const isOpenRouter = this.settings.provider === 'openrouter';
     const isOpenAI = this.settings.provider === 'openai';
@@ -330,9 +333,10 @@ export class AIService {
       { role: 'user', content },
     ];
 
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetchWithAITimeout(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: this.buildOpenAIHeaders(),
+      signal,
       body: JSON.stringify({ model: this.settings.model, messages, temperature: 0.7, max_tokens: 8192 }),
     });
     if (!response.ok) {
@@ -343,7 +347,7 @@ export class AIService {
     return data.choices[0]?.message?.content || '';
   }
 
-  private async callZhipuMultimodal(history: ChatMessage[], nextMessage: string, files: FileAttachment[], lang?: string): Promise<string> {
+  private async callZhipuMultimodal(history: ChatMessage[], nextMessage: string, files: FileAttachment[], lang?: string, signal?: AbortSignal): Promise<string> {
     const content: any[] = [];
     if (nextMessage) content.push({ type: 'text', text: nextMessage });
     for (const file of files) {
@@ -357,9 +361,10 @@ export class AIService {
         content.push({ type: 'text', text: `\n--- 附件: ${file.name} ---\n${file.content}\n--- 附件结束 ---` });
       }
     }
-    const response = await fetch(`${this.getBaseUrl()}/chat/completions`, {
+    const response = await fetchWithAITimeout(`${this.getBaseUrl()}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${requireProviderApiKey(this.settings)}` },
+      signal,
       body: JSON.stringify({
         model: this.settings.model,
         messages: [
@@ -396,18 +401,19 @@ export class AIService {
       switch (this.settings.provider) {
         case 'gemini': {
           const ai = await this.getGeminiClient();
-          const response = await ai.models.generateContent({
+          const response = await withAITimeout(ai.models.generateContent({
             model: this.settings.model,
             contents: prompt,
             config: { responseMimeType: 'application/json' },
-          });
+          }), options?.signal);
           return extractJSON(response.text || '{}');
         }
         default: {
           const baseUrl = this.getBaseUrl();
-          const response = await fetch(`${baseUrl}/chat/completions`, {
+          const response = await fetchWithAITimeout(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: this.buildOpenAIHeaders(),
+            signal: options?.signal,
             body: JSON.stringify({
               model: this.settings.model,
               messages: [
@@ -415,7 +421,7 @@ export class AIService {
                 { role: 'user', content: prompt },
               ],
               temperature: 0.3, max_tokens: 8192,
-              response_format: { type: 'json_object' },
+              ...getJSONResponseFormatParam(this.settings.provider),
             }),
           });
           if (!response.ok) {
@@ -678,24 +684,25 @@ export class AIService {
   // ─── JSON helper (used by ai/analysis.ts) ──────────────────
 
   /** Call provider for JSON output. Public so ai/analysis.ts standalone functions can use it. */
-  async callForJSON(prompt: string, maxTokens = 500): Promise<string> {
+  async callForJSON(prompt: string, maxTokens = 500, options?: AICallOptions): Promise<string> {
     if (this.settings.provider === 'gemini') {
       const ai = await this.getGeminiClient();
-      const response = await ai.models.generateContent({
+      const response = await withAITimeout(ai.models.generateContent({
         model: this.settings.model, contents: prompt,
         config: { responseMimeType: 'application/json' },
-      });
+      }), options?.signal);
       return response.text || '{}';
     }
     const baseUrl = this.getBaseUrl();
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetchWithAITimeout(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: this.buildOpenAIHeaders(),
+      signal: options?.signal,
       body: JSON.stringify({
         model: this.settings.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1, max_tokens: maxTokens,
-        response_format: { type: 'json_object' },
+        ...getJSONResponseFormatParam(this.settings.provider),
       }),
     });
     if (!response.ok) throw new Error(`API调用失败: ${response.status}`);
@@ -705,8 +712,8 @@ export class AIService {
 
   // ─── Analysis delegations (backward compat) ────────────────
 
-  validateReadiness(chatHistory: ChatMessage[]) { return _validateReadiness(this, chatHistory); }
-  recommendCases(chatHistory: ChatMessage[]) { return _recommendCases(this, chatHistory); }
-  extractNounsVerbs(text: string) { return _extractNounsVerbs(this, text); }
-  extractOntologyElements(text: string) { return _extractOntologyElements(this, text); }
+  validateReadiness(chatHistory: ChatMessage[], options?: AICallOptions) { return _validateReadiness(this, chatHistory, options); }
+  recommendCases(chatHistory: ChatMessage[], options?: AICallOptions) { return _recommendCases(this, chatHistory, options); }
+  extractNounsVerbs(text: string, options?: AICallOptions) { return _extractNounsVerbs(this, text, options); }
+  extractOntologyElements(text: string, options?: AICallOptions) { return _extractOntologyElements(this, text, options); }
 }

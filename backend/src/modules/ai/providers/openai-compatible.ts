@@ -1,6 +1,7 @@
 import { logger } from '../../../utils/logger.js';
 import type { AIProviderAdapter, ChatMessage, ChatOptions, ModelInfo } from './types.js';
 import { SYSTEM_INSTRUCTION, buildDesignPrompt, buildLanguageHint } from './prompts.js';
+import { fetchWithProviderTimeout, getJSONResponseFormatParam } from './request.js';
 
 interface OpenAICompatibleConfig {
   apiKey: string;
@@ -48,7 +49,7 @@ export class OpenAICompatibleAdapter implements AIProviderAdapter {
       ],
       temperature: options?.temperature ?? 0.3,
       ...(options?.maxTokens ? { max_tokens: options.maxTokens } : {}),
-      response_format: { type: 'json_object' },
+      ...getJSONResponseFormatParam(this.config.providerName),
     };
 
     const data = await this.callOpenAI(body);
@@ -57,7 +58,7 @@ export class OpenAICompatibleAdapter implements AIProviderAdapter {
 
   async listModels(): Promise<ModelInfo[]> {
     const url = `${this.config.baseUrl}/models`;
-    const res = await fetch(url, {
+    const res = await fetchWithProviderTimeout(url, {
       headers: this.buildHeaders(),
     });
 
@@ -83,7 +84,7 @@ export class OpenAICompatibleAdapter implements AIProviderAdapter {
 
   private async callOpenAI(body: Record<string, unknown>): Promise<Record<string, any>> {
     const url = `${this.config.baseUrl}/chat/completions`;
-    const res = await fetch(url, {
+    const res = await fetchWithProviderTimeout(url, {
       method: 'POST',
       headers: this.buildHeaders(),
       body: JSON.stringify(body),

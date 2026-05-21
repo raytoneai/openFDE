@@ -6,6 +6,7 @@
 import { apiClient } from '../apiClient';
 import type { EnrichedModelInfo, AICallOptions } from './types';
 import type { ChatMessage, AISettings } from '../../types';
+import { AI_REQUEST_TIMEOUT_MS } from './request';
 
 interface ChatResponse {
   content: string;
@@ -30,6 +31,9 @@ export async function proxyChat(
     model: settings.model,
     messages,
     options: options ? { lang: options.lang } : undefined,
+  }, {
+    signal: options?.signal,
+    timeoutMs: AI_REQUEST_TIMEOUT_MS,
   });
   return resp.content;
 }
@@ -87,6 +91,9 @@ export async function proxyDesign(
     model: settings.model,
     chatHistory: chatHistory.map(m => ({ role: m.role, content: m.content })),
     options: options ? { lang: options.lang } : undefined,
+  }, {
+    signal: options?.signal,
+    timeoutMs: AI_REQUEST_TIMEOUT_MS,
   });
   return resp.content;
 }

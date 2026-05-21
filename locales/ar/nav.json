@@ -40,6 +40,7 @@
     "ready": "Standby",
     "synthesizing": "Synthesizing System Architecture...",
     "mapping": "Mapping Entities, Relations & Intelligence",
+    "cancel": "Cancel",
     "newSession": "New Session",
     "confirmNewSession": "Start a new session? Current conversation and design will be cleared.",
     "applyArchetype": "Apply template to current project? This will replace existing ontology design.",

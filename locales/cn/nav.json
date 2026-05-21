@@ -40,6 +40,7 @@
     "ready": "待命",
     "synthesizing": "正在合成系统架构...",
     "mapping": "映射实体、关系与智能逻辑",
+    "cancel": "取消",
     "newSession": "新建会话",
     "confirmNewSession": "确定要开始新会话吗？当前的对话和设计将被清除。",
     "applyArchetype": "应用此模板到当前项目？这将替换现有的本体设计。",

@@ -62,6 +62,7 @@ const AppContent: React.FC = () => {
 
   const {
     isDesigning, selectedArchetypeId, setSelectedArchetypeId,
+    cancelAutoDesign,
     triggerAutoDesign, handleSelectArchetype, handleApplyArchetype, handleNewSession,
   } = useDesignOrchestration({
     aiService, chatHistoryRef, activeProjectIdRef,
@@ -174,6 +175,7 @@ const AppContent: React.FC = () => {
         chatHistoryRef={chatHistoryRef}
         isChatLoading={isChatLoading}
         isDesigning={isDesigning}
+        onCancelDesign={cancelAutoDesign}
         activeProviderApiKey={activeProviderApiKey}
         aiSettings={aiSettings}
         selectedArchetypeId={selectedArchetypeId}

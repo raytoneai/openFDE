@@ -40,6 +40,7 @@
     "ready": "En attente",
     "synthesizing": "Synthèse de l'architecture système...",
     "mapping": "Cartographie des entités, relations et intelligence",
+    "cancel": "Annuler",
     "newSession": "Nouvelle session",
     "confirmNewSession": "Démarrer une nouvelle session ? La conversation et la conception en cours seront effacées.",
     "applyArchetype": "Appliquer le modèle au projet actuel ? Cela remplacera la conception Ontology existante.",

@@ -5,6 +5,7 @@
 import { AISettings, OntologyObject, OntologyLink, AIPAction, AIIntegrationType, AI_PROVIDERS } from '../types';
 import { extractJSON } from '../lib/jsonUtils';
 import { requireProviderApiKey } from '../lib/apiKeyUtils';
+import { fetchWithAITimeout, getJSONResponseFormatParam, withAITimeout } from './ai/request';
 
 // AI 增强建议类型
 export type SuggestionCategory =
@@ -240,13 +241,13 @@ export class AIAnalysisService {
     const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey: requireProviderApiKey(this.settings) });
 
-    const response = await ai.models.generateContent({
+    const response = await withAITimeout(ai.models.generateContent({
       model: this.settings.model,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
       },
-    });
+    }));
 
     return extractJSON(response.text || '{}');
   }
@@ -264,7 +265,7 @@ export class AIAnalysisService {
       headers['X-Title'] = 'Ontology Architect';
     }
 
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetchWithAITimeout(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -275,7 +276,7 @@ export class AIAnalysisService {
         ],
         temperature: 0.3,
         max_tokens: 4096,
-        response_format: { type: 'json_object' },
+        ...getJSONResponseFormatParam(this.settings.provider),
       }),
     });
 

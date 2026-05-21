@@ -26,6 +26,7 @@ interface AuthResponse {
 }
 
 type AuthChangeCallback = (isAuthenticated: boolean) => void;
+type ApiRequestOptions = RequestInit & { timeoutMs?: number };
 
 // Constants for token refresh
 const REFRESH_TIMEOUT_MS = 10000; // 10 seconds timeout for refresh requests
@@ -242,32 +243,66 @@ class ApiClient {
    */
   async request<T>(
     path: string,
-    options: RequestInit = {}
+    options: ApiRequestOptions = {}
   ): Promise<T> {
-    let response = await this.fetchWithAuth(path, options);
+    const { timeoutMs, signal: upstreamSignal, ...fetchOptions } = options;
+    const controller = timeoutMs ? new AbortController() : null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    // If 401, try to refresh token and retry
-    if (response.status === 401 && this.tokens.refreshToken) {
-      const refreshed = await this.refreshTokens();
-      if (refreshed) {
-        response = await this.fetchWithAuth(path, options);
+    const abortFromUpstream = () => controller?.abort(upstreamSignal?.reason);
+    if (controller && upstreamSignal) {
+      if (upstreamSignal.aborted) {
+        abortFromUpstream();
+      } else {
+        upstreamSignal.addEventListener('abort', abortFromUpstream, { once: true });
       }
     }
 
-    // Handle error responses
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        message: `HTTP ${response.status}`,
-      }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+    if (controller && timeoutMs) {
+      timeoutId = setTimeout(() => {
+        controller.abort(new Error(`Request timeout after ${Math.round(timeoutMs / 1000)} seconds`));
+      }, timeoutMs);
     }
 
-    // Handle empty responses (204 No Content)
-    if (response.status === 204) {
-      return undefined as T;
-    }
+    const effectiveOptions: RequestInit = {
+      ...fetchOptions,
+      signal: controller?.signal ?? upstreamSignal,
+    };
 
-    return response.json();
+    try {
+      let response = await this.fetchWithAuth(path, effectiveOptions);
+
+      // If 401, try to refresh token and retry
+      if (response.status === 401 && this.tokens.refreshToken) {
+        const refreshed = await this.refreshTokens();
+        if (refreshed) {
+          response = await this.fetchWithAuth(path, effectiveOptions);
+        }
+      }
+
+      // Handle error responses
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({
+          message: `HTTP ${response.status}`,
+        }));
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      // Handle empty responses (204 No Content)
+      if (response.status === 204) {
+        return undefined as T;
+      }
+
+      return response.json();
+    } catch (error) {
+      if (controller?.signal.aborted && controller.signal.reason instanceof Error) {
+        throw controller.signal.reason;
+      }
+      throw error;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+      upstreamSignal?.removeEventListener('abort', abortFromUpstream);
+    }
   }
 
   /**
@@ -280,8 +315,9 @@ class ApiClient {
   /**
    * POST request
    */
-  async post<T>(path: string, body?: unknown): Promise<T> {
+  async post<T>(path: string, body?: unknown, options: ApiRequestOptions = {}): Promise<T> {
     return this.request<T>(path, {
+      ...options,
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     });

@@ -39,6 +39,7 @@ interface MainContentProps {
   chatHistoryRef: React.MutableRefObject<ChatMessage[]>;
   isChatLoading: boolean;
   isDesigning: boolean;
+  onCancelDesign: () => void;
   activeProviderApiKey: string | undefined;
   aiSettings: AISettings;
   // Archetype
@@ -61,6 +62,7 @@ interface MainContentProps {
 const MainContent: React.FC<MainContentProps> = ({
   activeTab, setActiveTab, lang, project, setProject,
   chatMessages, chatHistoryRef, isChatLoading, isDesigning,
+  onCancelDesign,
   activeProviderApiKey, aiSettings,
   selectedArchetypeId, onSelectArchetype, onApplyArchetype,
   aiAnalysisResult, setAiAnalysisResult,
@@ -80,6 +82,14 @@ const MainContent: React.FC<MainContentProps> = ({
           />
           <h2 className="text-lg font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('app.synthesizing')}</h2>
           <p className="text-muted mt-2 text-sm">{t('app.mapping')}</p>
+          <button
+            type="button"
+            onClick={onCancelDesign}
+            className="mt-5 px-4 py-2 rounded-md text-sm transition-colors hover:bg-[var(--color-bg-hover)]"
+            style={{ color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}
+          >
+            {t('app.cancel')}
+          </button>
         </div>
       )}
 

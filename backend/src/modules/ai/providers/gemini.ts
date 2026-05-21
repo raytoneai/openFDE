@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { logger } from '../../../utils/logger.js';
 import type { AIProviderAdapter, ChatMessage, ChatOptions, ModelInfo } from './types.js';
 import { SYSTEM_INSTRUCTION, buildDesignPrompt, buildLanguageHint } from './prompts.js';
+import { withProviderTimeout } from './request.js';
 
 export class GeminiAdapter implements AIProviderAdapter {
   private client: GoogleGenAI;
@@ -19,7 +20,7 @@ export class GeminiAdapter implements AIProviderAdapter {
       parts: [{ text: m.content }],
     }));
 
-    const response = await this.client.models.generateContent({
+    const response = await withProviderTimeout(this.client.models.generateContent({
       model,
       contents,
       config: {
@@ -27,7 +28,7 @@ export class GeminiAdapter implements AIProviderAdapter {
         temperature: options?.temperature ?? 0.7,
         ...(options?.maxTokens ? { maxOutputTokens: options.maxTokens } : {}),
       },
-    });
+    }));
 
     return response.text ?? '';
   }
@@ -40,7 +41,7 @@ export class GeminiAdapter implements AIProviderAdapter {
     const langHint = buildLanguageHint(options?.lang, true);
     const systemInstruction = SYSTEM_INSTRUCTION + langHint;
 
-    const response = await this.client.models.generateContent({
+    const response = await withProviderTimeout(this.client.models.generateContent({
       model,
       contents: [{ role: 'user', parts: [{ text: buildDesignPrompt(historyText) }] }],
       config: {
@@ -49,7 +50,7 @@ export class GeminiAdapter implements AIProviderAdapter {
         responseMimeType: 'application/json',
         ...(options?.maxTokens ? { maxOutputTokens: options.maxTokens } : {}),
       },
-    });
+    }));
 
     return response.text ?? '';
   }
