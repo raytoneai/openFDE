@@ -16,7 +16,7 @@ Thank you for your interest in contributing to Ontology Architect! This guide wi
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd ontology-assistant
+cd openFDE
 
 # Install dependencies
 npm install
@@ -59,7 +59,7 @@ npm run check
 This command runs the following checks in sequence:
 
 1. **Cardinality tests** -- unit tests for link normalization
-2. **TypeScript compilation** -- `tsc --noEmit` (must be run from the `ontology-assistant/` directory)
+2. **TypeScript compilation** -- `tsc --noEmit` (must be run from the repo root)
 3. **Production build** -- `vite build`
 4. **i18n completeness check** -- verifies all locale files are in sync
 

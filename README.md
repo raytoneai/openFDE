@@ -120,7 +120,7 @@ Discover → Model → Integrate → AI Design → Deliver
 ```bash
 # Clone and install
 git clone <repository-url>
-cd ontology-assistant
+cd openFDE
 npm install
 
 # Start dev server
@@ -144,7 +144,7 @@ App runs at http://localhost:3000.
 ## Project Structure
 
 ```
-ontology-assistant/
+openFDE/
 ├── App.tsx                        # Main app orchestration, Review panel, routing
 ├── pages/
 │   ├── ScoutingPage.tsx           # Phase 1: Requirement discovery
@@ -299,7 +299,7 @@ AI + 本体        对象 ── 关系 ──▶ 对象
 
 ```bash
 git clone <repository-url>
-cd ontology-assistant
+cd openFDE
 npm install
 npm run dev
 ```
@@ -365,7 +365,7 @@ Quand les actions sont décrites sémantiquement avec un contexte métier clair,
 
 ```bash
 git clone <repository-url>
-cd ontology-assistant
+cd openFDE
 npm install
 npm run dev
 ```
@@ -430,7 +430,7 @@ AI + オントロジー  オブジェクト ── リンク ──▶ オブジ
 
 ```bash
 git clone <repository-url>
-cd ontology-assistant
+cd openFDE
 npm install
 npm run dev
 ```
@@ -496,7 +496,7 @@ Cuando las acciones se describen semánticamente con un contexto empresarial cla
 
 ```bash
 git clone <repository-url>
-cd ontology-assistant
+cd openFDE
 npm install
 npm run dev
 ```
@@ -561,7 +561,7 @@ AI + Ontology      كائنات ── روابط ──▶ كائنات
 
 ```bash
 git clone <repository-url>
-cd ontology-assistant
+cd openFDE
 npm install
 npm run dev
 ```

@@ -23,7 +23,7 @@ jobs:
         id: changelog
         run: |
           # Extract the section for this version from CHANGELOG.md
-          sed -n '/^## \[${{ steps.version.outputs.version }}\]/,/^## \[/p' ontology-assistant/CHANGELOG.md | head -n -1 > release_notes.md
+          sed -n '/^## \[${{ steps.version.outputs.version }}\]/,/^## \[/p' CHANGELOG.md | head -n -1 > release_notes.md
           # Fallback if no matching section
           if [ ! -s release_notes.md ]; then
             echo "Release v${{ steps.version.outputs.version }}" > release_notes.md
