@@ -82,8 +82,7 @@ test.describe('Archetype lazy-loading regression', () => {
   });
 
   test('3 — Template list loads inside NewProjectDialog (create-from-template flow)', async ({ page }) => {
-    // The ProjectDashboard requires auth to open the dialog.
-    // Use QuickStart page which has an ungated "Create Project" button.
+    // Use QuickStart as the stable create-from-template entry point.
     await page.getByRole('button', { name: '快速开始' }).click();
 
     // Click the "准备好开始" (Ready to Build) card to open NewProjectDialog

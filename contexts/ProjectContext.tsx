@@ -79,16 +79,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       return;
     }
 
-    if (!isAuthenticated) {
-      setProjects([]);
-      setActiveProjectId(null);
-      setCurrentOntologyState(null);
-      setCurrentChatState([]);
-      setIsLoading(false);
-      setIsInitialized(true);
-      return;
-    }
-
     let isCancelled = false;
 
     const initialize = async () => {
@@ -149,7 +139,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
   // Auto-save current ontology when it changes
   useEffect(() => {
-    if (!isAuthenticated || !isInitialized || !activeProjectId || isSwitchingRef.current) return;
+    if (!isInitialized || !activeProjectId || isSwitchingRef.current) return;
     if (!currentOntology) return;
 
     // Cancel any pending save
@@ -173,11 +163,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         clearTimeout(saveDebounceTimerRef.current);
       }
     };
-  }, [currentOntology, activeProjectId, isInitialized, isAuthenticated]);
+  }, [currentOntology, activeProjectId, isInitialized]);
 
   // Auto-save chat messages when they change
   useEffect(() => {
-    if (!isAuthenticated || !isInitialized || !activeProjectId || isSwitchingRef.current) return;
+    if (!isInitialized || !activeProjectId || isSwitchingRef.current) return;
 
     // Debounce save
     const timer = setTimeout(() => {
@@ -185,7 +175,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [currentChat, activeProjectId, isInitialized, isAuthenticated]);
+  }, [currentChat, activeProjectId, isInitialized]);
 
   // Get active project metadata
   const activeProject = projects.find(p => p.id === activeProjectId) || null;
@@ -200,10 +190,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     baseArchetypeName?: string;
     initialState?: ProjectState;
   }): Project => {
-    if (!isAuthenticated) {
-      throw new Error('Authentication required to create project');
-    }
-
     const project = storage.createProject(params);
 
     // Refresh projects list
@@ -217,14 +203,10 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     setCurrentChatState(chat);
 
     return project;
-  }, [isAuthenticated]);
+  }, []);
 
   // Switch to a different project
   const switchProject = useCallback(async (projectId: string) => {
-    if (!isAuthenticated) {
-      throw new Error('Authentication required to switch project');
-    }
-
     if (projectId === activeProjectId) return;
 
     // Prevent concurrent switches
@@ -269,14 +251,10 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       isSwitchingRef.current = false;
       switchingLockRef.current = null;
     }
-  }, [activeProjectId, currentOntology, currentChat, isAuthenticated]);
+  }, [activeProjectId, currentOntology, currentChat]);
 
   // Delete a project
   const deleteProject = useCallback((projectId: string) => {
-    if (!isAuthenticated) {
-      throw new Error('Authentication required to delete project');
-    }
-
     storage.deleteProject(projectId);
 
     // Update state
@@ -297,47 +275,36 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         setCurrentChatState([]);
       }
     }
-  }, [activeProjectId, isAuthenticated]);
+  }, [activeProjectId]);
 
   // Update project metadata
   const updateProject = useCallback((
     projectId: string,
     updates: Partial<Pick<ProjectListItem, 'name' | 'description' | 'industry' | 'status' | 'tags'>>
   ) => {
-    if (!isAuthenticated) {
-      throw new Error('Authentication required to update project');
-    }
-
     storage.updateProject(projectId, updates);
     setProjects(storage.listProjectsLocal());
-  }, [isAuthenticated]);
+  }, []);
 
   // Set current ontology (for external updates)
   const setCurrentOntology = useCallback((state: React.SetStateAction<ProjectState | null>) => {
-    if (!isAuthenticated) return;
     setCurrentOntologyState(state);
-  }, [isAuthenticated]);
+  }, []);
 
   // Set chat messages
   const setChatMessages = useCallback((messages: React.SetStateAction<ChatMessage[]>) => {
-    if (!isAuthenticated) return;
     setCurrentChatState(messages);
-  }, [isAuthenticated]);
+  }, []);
 
   // Add a single chat message
   const addChatMessage = useCallback((message: ChatMessage) => {
-    if (!isAuthenticated) return;
     setCurrentChatState(prev => [...prev, message]);
-  }, [isAuthenticated]);
+  }, []);
 
   // Refresh projects list
   const refreshProjects = useCallback(() => {
-    if (!isAuthenticated) {
-      setProjects([]);
-      return;
-    }
     setProjects(storage.listProjectsLocal());
-  }, [isAuthenticated]);
+  }, []);
 
   const value: ProjectContextType = {
     projects,

@@ -9,7 +9,6 @@ import React, { useState, useMemo } from 'react';
 
 
 import { useProject } from '../contexts/ProjectContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useAppTranslation } from '../hooks/useAppTranslation';
 import {
   FolderOpen, Plus, Search, Trash2, Clock, Package,
@@ -40,18 +39,12 @@ export default function ProjectDashboard({ onOpenProject }: Props) {
     updateProject,
     isLoading
   } = useProject();
-  const { isAuthenticated } = useAuth();
-
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [sharingProjectId, setSharingProjectId] = useState<string | null>(null);
 
   const handleOpenCreateDialog = () => {
-    if (!isAuthenticated) {
-      alert(`${t('projectDashboard.loginRequired')}\n${t('projectDashboard.authHint')}`);
-      return;
-    }
     setShowNewDialog(true);
   };
 
@@ -131,8 +124,8 @@ export default function ProjectDashboard({ onOpenProject }: Props) {
           onClick={handleOpenCreateDialog}
           className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors hover:opacity-90"
           style={{
-            backgroundColor: isAuthenticated ? 'var(--color-accent)' : 'var(--color-bg-hover)',
-            color: isAuthenticated ? 'var(--color-bg-base)' : 'var(--color-text-muted)'
+            backgroundColor: 'var(--color-accent)',
+            color: 'var(--color-bg-base)'
           }}
         >
           <Plus size={18} />
@@ -190,8 +183,8 @@ export default function ProjectDashboard({ onOpenProject }: Props) {
             onClick={handleOpenCreateDialog}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg transition-colors hover:opacity-90"
             style={{
-              backgroundColor: isAuthenticated ? 'var(--color-accent)' : 'var(--color-bg-hover)',
-              color: isAuthenticated ? 'var(--color-bg-base)' : 'var(--color-text-muted)'
+              backgroundColor: 'var(--color-accent)',
+              color: 'var(--color-bg-base)'
             }}
           >
             <Plus size={18} />
