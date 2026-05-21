@@ -27,6 +27,7 @@ github-config.local.json
 test-results/
 
 # AI tooling / internal planning docs (not part of the application)
+.ontolens/
 CLAUDE.md
 SECURITY_BACKLOG.md
 GIT_CONVENTION.md
