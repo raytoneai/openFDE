@@ -15,15 +15,12 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: ontology-assistant/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
-        working-directory: ontology-assistant
         run: npm ci
       - name: Type check
-        working-directory: ontology-assistant
         run: npx tsc --noEmit
       - name: Build
-        working-directory: ontology-assistant
         run: npm run build
 
   backend:
@@ -48,18 +45,18 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: ontology-assistant/backend/package-lock.json
+          cache-dependency-path: backend/package-lock.json
       - name: Install dependencies
-        working-directory: ontology-assistant/backend
+        working-directory: backend
         run: npm ci
       - name: Generate Prisma client
-        working-directory: ontology-assistant/backend
+        working-directory: backend
         run: npx prisma generate
       - name: Build
-        working-directory: ontology-assistant/backend
+        working-directory: backend
         run: npm run build
       - name: Run tests
-        working-directory: ontology-assistant/backend
+        working-directory: backend
         run: npm run test
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/ontology_test
