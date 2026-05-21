@@ -66,8 +66,9 @@ export function useDesignOrchestration(deps: DesignOrchestrationDeps) {
       });
 
       if (!readiness.ready) {
-        alert(readiness.suggestion || t('app.alertNoChatHistory'));
-        return;
+        const reason = readiness.suggestion || t('app.alertNoChatHistory');
+        const proceed = window.confirm(t('app.confirmReadinessLow', { reason }));
+        if (!proceed) return;
       }
 
       const result = await aiService.current.designOntology(chatHistoryRef.current, {

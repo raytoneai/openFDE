@@ -54,6 +54,7 @@
     "readiness": "Préparation",
     "alertSelectModel": "Veuillez d'abord sélectionner un modèle dans les paramètres",
     "alertNoChatHistory": "Aucun historique de conversation, veuillez d'abord discuter",
+    "confirmReadinessLow": "Le modèle estime que la conversation peut être insuffisante pour produire une bonne conception.\n\nRaison : {{reason}}\n\nGénérer quand même ?",
     "alertNoObjects": "L'AI n'a pas pu identifier d'objets métier. Veuillez fournir plus de détails métier dans la conversation et réessayer.",
     "alertProjectChanged": "Le projet a changé pendant la génération. Résultat ignoré. Veuillez régénérer dans le projet actuel.",
     "alertDesignFailed": "Échec de la génération : {{error}}",

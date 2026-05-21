@@ -54,6 +54,7 @@
     "readiness": "就绪状态",
     "alertSelectModel": "请先在设置中选择一个模型",
     "alertNoChatHistory": "没有对话记录，请先进行对话",
+    "confirmReadinessLow": "模型判断当前对话信息可能不足以产出高质量设计。\n\n原因：{{reason}}\n\n仍要继续生成吗？",
     "alertNoObjects": "AI未能识别出业务对象。请在对话中提供更多业务细节后重试。",
     "alertProjectChanged": "生成期间项目已切换，结果已丢弃。请在当前项目中重新生成。",
     "alertDesignFailed": "生成失败: {{error}}",

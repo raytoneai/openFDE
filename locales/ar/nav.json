@@ -54,6 +54,7 @@
     "readiness": "Readiness",
     "alertSelectModel": "Please select a model in settings first",
     "alertNoChatHistory": "No chat history, please chat first",
+    "confirmReadinessLow": "The model judges the conversation may be insufficient for a good design.\n\nReason: {{reason}}\n\nGenerate anyway?",
     "alertNoObjects": "AI could not identify business objects. Please provide more business details in the conversation and try again.",
     "alertProjectChanged": "Project changed during generation. Result discarded. Please regenerate in the current project.",
     "alertDesignFailed": "Generation failed: {{error}}",

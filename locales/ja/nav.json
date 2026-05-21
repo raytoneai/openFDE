@@ -54,6 +54,7 @@
     "readiness": "レディネス",
     "alertSelectModel": "先に設定でモデルを選択してください",
     "alertNoChatHistory": "チャット履歴がありません。先にチャットしてください",
+    "confirmReadinessLow": "モデルは現在の会話だけでは十分な設計を生成できない可能性があると判断しました。\n\n理由：{{reason}}\n\nそれでも生成しますか？",
     "alertNoObjects": "AIがビジネスオブジェクトを特定できませんでした。会話でより詳細なビジネス情報を提供して、再試行してください。",
     "alertProjectChanged": "生成中にプロジェクトが変更されました。結果は破棄されました。現在のプロジェクトで再生成してください。",
     "alertDesignFailed": "生成に失敗しました: {{error}}",
