@@ -186,7 +186,8 @@ export class AIAnalysisService {
   async analyzeOntology(
     objects: OntologyObject[],
     links: OntologyLink[],
-    lang: string = 'cn'
+    lang: string = 'cn',
+    options?: { signal?: AbortSignal }
   ): Promise<AnalysisResult> {
     // 构建 Ontology 摘要 JSON
     const ontologySummary = {
@@ -219,7 +220,7 @@ export class AIAnalysisService {
     const prompt = ANALYSIS_PROMPT(JSON.stringify(ontologySummary, null, 2), lang);
 
     try {
-      const responseText = await this.callAI(prompt);
+      const responseText = await this.callAI(prompt, options?.signal);
       const result = this.parseResponse(responseText);
       return result;
     } catch (error) {
@@ -228,16 +229,16 @@ export class AIAnalysisService {
     }
   }
 
-  private async callAI(prompt: string): Promise<string> {
+  private async callAI(prompt: string, signal?: AbortSignal): Promise<string> {
     switch (this.settings.provider) {
       case 'gemini':
-        return await this.callGemini(prompt);
+        return await this.callGemini(prompt, signal);
       default:
-        return await this.callOpenAICompatible(prompt);
+        return await this.callOpenAICompatible(prompt, signal);
     }
   }
 
-  private async callGemini(prompt: string): Promise<string> {
+  private async callGemini(prompt: string, signal?: AbortSignal): Promise<string> {
     const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey: requireProviderApiKey(this.settings) });
 
@@ -247,12 +248,12 @@ export class AIAnalysisService {
       config: {
         responseMimeType: 'application/json',
       },
-    }));
+    }), signal);
 
     return extractJSON(response.text || '{}');
   }
 
-  private async callOpenAICompatible(prompt: string): Promise<string> {
+  private async callOpenAICompatible(prompt: string, signal?: AbortSignal): Promise<string> {
     const baseUrl = this.getBaseUrl();
 
     const headers: Record<string, string> = {
@@ -268,6 +269,7 @@ export class AIAnalysisService {
     const response = await fetchWithAITimeout(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers,
+      signal,
       body: JSON.stringify({
         model: this.settings.model,
         messages: [
