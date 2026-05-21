@@ -2,12 +2,16 @@ import type { AIProvider } from '../../types';
 
 export const AI_REQUEST_TIMEOUT_MS = 120_000;
 
-export function supportsJSONResponseFormat(provider: AIProvider): boolean {
+export function supportsJSONResponseFormat(provider: AIProvider, override?: boolean): boolean {
+  if (typeof override === 'boolean') return override;
   return provider === 'openai' || provider === 'openrouter';
 }
 
-export function getJSONResponseFormatParam(provider: AIProvider): { response_format: { type: 'json_object' } } | {} {
-  return supportsJSONResponseFormat(provider)
+export function getJSONResponseFormatParam(
+  provider: AIProvider,
+  override?: boolean,
+): { response_format: { type: 'json_object' } } | {} {
+  return supportsJSONResponseFormat(provider, override)
     ? { response_format: { type: 'json_object' as const } }
     : {};
 }

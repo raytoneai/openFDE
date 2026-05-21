@@ -1,19 +1,25 @@
-export const AI_PROVIDER_TIMEOUT_MS = 120_000;
+export const AI_REQUEST_TIMEOUT_MS = 120_000;
 
 export function supportsJSONResponseFormat(providerName: string): boolean {
   return providerName === 'openai' || providerName === 'openrouter';
 }
 
-export function getJSONResponseFormatParam(providerName: string): { response_format: { type: 'json_object' } } | {} {
-  return supportsJSONResponseFormat(providerName)
+export function getJSONResponseFormatParam(
+  providerName: string,
+  override?: boolean,
+): { response_format: { type: 'json_object' } } | {} {
+  const enabled = typeof override === 'boolean'
+    ? override
+    : supportsJSONResponseFormat(providerName);
+  return enabled
     ? { response_format: { type: 'json_object' as const } }
     : {};
 }
 
-export async function fetchWithProviderTimeout(
+export async function fetchWithAITimeout(
   input: string | URL,
   init: RequestInit = {},
-  timeoutMs = AI_PROVIDER_TIMEOUT_MS,
+  timeoutMs = AI_REQUEST_TIMEOUT_MS,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
@@ -35,9 +41,9 @@ export async function fetchWithProviderTimeout(
   }
 }
 
-export async function withProviderTimeout<T>(
+export async function withAITimeout<T>(
   promise: Promise<T>,
-  timeoutMs = AI_PROVIDER_TIMEOUT_MS,
+  timeoutMs = AI_REQUEST_TIMEOUT_MS,
 ): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   try {

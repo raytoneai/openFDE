@@ -1,7 +1,7 @@
 import { logger } from '../../../utils/logger.js';
 import type { AIProviderAdapter, ChatMessage, ChatOptions, ModelInfo } from './types.js';
 import { SYSTEM_INSTRUCTION, buildDesignPrompt, buildLanguageHint } from './prompts.js';
-import { fetchWithProviderTimeout, getJSONResponseFormatParam } from './request.js';
+import { fetchWithAITimeout, getJSONResponseFormatParam } from './request.js';
 
 interface OpenAICompatibleConfig {
   apiKey: string;
@@ -58,7 +58,7 @@ export class OpenAICompatibleAdapter implements AIProviderAdapter {
 
   async listModels(): Promise<ModelInfo[]> {
     const url = `${this.config.baseUrl}/models`;
-    const res = await fetchWithProviderTimeout(url, {
+    const res = await fetchWithAITimeout(url, {
       headers: this.buildHeaders(),
     });
 
@@ -84,7 +84,7 @@ export class OpenAICompatibleAdapter implements AIProviderAdapter {
 
   private async callOpenAI(body: Record<string, unknown>): Promise<Record<string, any>> {
     const url = `${this.config.baseUrl}/chat/completions`;
-    const res = await fetchWithProviderTimeout(url, {
+    const res = await fetchWithAITimeout(url, {
       method: 'POST',
       headers: this.buildHeaders(),
       body: JSON.stringify(body),

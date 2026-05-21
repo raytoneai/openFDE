@@ -348,6 +348,12 @@ export interface AISettings {
   apiKeys?: Partial<Record<AIProvider, string>>;
   model: string;
   customBaseUrl?: string;
+  /**
+   * Opt-in for OpenAI-compatible `response_format: json_object` on providers
+   * that don't get it by default (notably `custom` gateways like vLLM/Together).
+   * Leave undefined to use the provider's default.
+   */
+  supportsJsonResponseFormat?: boolean;
 }
 
 // 预定义的Provider配置

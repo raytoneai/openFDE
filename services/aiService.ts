@@ -421,7 +421,7 @@ export class AIService {
                 { role: 'user', content: prompt },
               ],
               temperature: 0.3, max_tokens: 8192,
-              ...getJSONResponseFormatParam(this.settings.provider),
+              ...getJSONResponseFormatParam(this.settings.provider, this.settings.supportsJsonResponseFormat),
             }),
           });
           if (!response.ok) {
@@ -702,7 +702,7 @@ export class AIService {
         model: this.settings.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1, max_tokens: maxTokens,
-        ...getJSONResponseFormatParam(this.settings.provider),
+        ...getJSONResponseFormatParam(this.settings.provider, this.settings.supportsJsonResponseFormat),
       }),
     });
     if (!response.ok) throw new Error(`API调用失败: ${response.status}`);

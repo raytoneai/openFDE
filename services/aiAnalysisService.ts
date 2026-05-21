@@ -278,7 +278,7 @@ export class AIAnalysisService {
         ],
         temperature: 0.3,
         max_tokens: 4096,
-        ...getJSONResponseFormatParam(this.settings.provider),
+        ...getJSONResponseFormatParam(this.settings.provider, this.settings.supportsJsonResponseFormat),
       }),
     });
 
