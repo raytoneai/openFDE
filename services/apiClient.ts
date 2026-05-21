@@ -308,8 +308,8 @@ class ApiClient {
   /**
    * GET request
    */
-  async get<T>(path: string): Promise<T> {
-    return this.request<T>(path, { method: 'GET' });
+  async get<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+    return this.request<T>(path, { ...options, method: 'GET' });
   }
 
   /**

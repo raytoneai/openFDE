@@ -38,6 +38,10 @@ export async function proxyChat(
   return resp.content;
 }
 
+/**
+ * Multimodal proxy call. signal/timeoutMs flow through `options` into
+ * `proxyChat`, which forwards them to apiClient.post — no separate wiring.
+ */
 export async function proxyChatWithFiles(
   settings: AISettings,
   history: ChatMessage[],
@@ -100,9 +104,14 @@ export async function proxyDesign(
 
 export async function proxyListModels(
   settings: AISettings,
+  options?: AICallOptions,
 ): Promise<EnrichedModelInfo[]> {
   const resp = await apiClient.get<ModelsResponse>(
     `/ai/models?provider=${encodeURIComponent(settings.provider)}`,
+    {
+      signal: options?.signal,
+      timeoutMs: AI_REQUEST_TIMEOUT_MS,
+    },
   );
   return (resp.models || []).map(m => ({
     id: m.id,
